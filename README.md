@@ -1,4 +1,4 @@
-# Get-together
+# Get-Together
 
 <!-- # `<name of application here>` -->
 
