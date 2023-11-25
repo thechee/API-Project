@@ -11,7 +11,7 @@ const router = express.Router();
 
 const validateLogin = [
   check('credential')
-    .exists({ checkFalsy: true})
+    .exists({ checkFalsy: true })
     .notEmpty()
     .withMessage('Please provide a valid email or username.'),
   check('password')
@@ -20,11 +20,14 @@ const validateLogin = [
   handleValidationErrors
 ];
 
+// Current Logged In User
 router.get('/', (req, res) => {
   const { user } = req;
   if (user) {
     const safeUser = {
       id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       username: user.username
     };
@@ -34,6 +37,7 @@ router.get('/', (req, res) => {
   } else return res.json({ user: null });
 });
 
+// Login
 router.post('/', validateLogin, async (req, res, next) => {
   const { credential, password } = req.body;
 
@@ -56,6 +60,8 @@ router.post('/', validateLogin, async (req, res, next) => {
 
   const safeUser = {
     id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
     username: user.username
   };
