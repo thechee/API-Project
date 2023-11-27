@@ -27,11 +27,48 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Groups'
       }
     },
-    address: DataTypes.STRING,
-    city: DataTypes.STRING,
-    state: DataTypes.STRING,
-    lat: DataTypes.DECIMAL,
-    lng: DataTypes.DECIMAL
+    address: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isAlphanumeric: true
+      }
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isAlpha: true
+      }
+    },
+    state: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: [2, 2],
+        isAlpha: true
+      }
+    },
+    lat: {
+      type: DataTypes.DECIMAL,
+      validate: {
+        isWithin90(value) {
+          if (Math.abs(value) > 90) {
+            throw new Error('Latitude cannot be greater than 90 or less than -90 degrees')
+          }
+        }
+      }
+    },
+    lng: {
+      type: DataTypes.DECIMAL,
+      validate: {
+        isWithin180(value) {
+          if (Math.abs(value) > 180) {
+            throw new Error('Longitude cannot be greater than 180 or less than -180 degrees')
+          }
+        }
+      }
+    }
   }, {
     sequelize,
     modelName: 'Venue',
