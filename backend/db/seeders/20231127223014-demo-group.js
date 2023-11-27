@@ -35,7 +35,7 @@ module.exports = {
         about: 'We got to galleries and thumb our noses at everything',
         type: 'In person',
         private: true,
-        city: 'Milwalkie',
+        city: 'Milwaukee',
         state: 'Wisconsin'
       }
     ])
