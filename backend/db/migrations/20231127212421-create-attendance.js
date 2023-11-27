@@ -8,7 +8,7 @@ if (process.env.NODE_ENV === 'production') {
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('EventImages', {
+    await queryInterface.createTable('Attendances', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -21,11 +21,14 @@ module.exports = {
           model: 'Events'
         }
       },
-      url: {
-        type: Sequelize.STRING
+      userId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users'
+        }
       },
-      preview: {
-        type: Sequelize.BOOLEAN
+      status: {
+        type: Sequelize.ENUM('attending', 'waitlist', 'pending')
       },
       createdAt: {
         allowNull: false,
@@ -40,7 +43,7 @@ module.exports = {
     }, options);
   },
   async down(queryInterface, Sequelize) {
-    options.tableName = 'EventImages'
+    options.tableName = 'Attendances'
     await queryInterface.dropTable(options);
   }
 };
