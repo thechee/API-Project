@@ -23,6 +23,12 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.Attendance, {
         foreignKey: 'userId'
       })
+
+      User.belongsToMany(models.Group, {
+        through: 'Membership',
+        foreignKey: 'userId',
+        otherKey: 'groupId'
+      })
     }
   }
   User.init({
