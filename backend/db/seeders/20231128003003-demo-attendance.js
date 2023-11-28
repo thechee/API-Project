@@ -1,6 +1,6 @@
 'use strict';
 
-const { EventImage } = require('../models')
+const { Attendance } = require('../models')
 
 let options = {};
 if (process.env.NODE_ENV === 'production') {
@@ -10,40 +10,40 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await EventImage.bulkCreate([
+    await Attendance.bulkCreate([
       {
         eventId: 1,
-        url: 'image url',
-        preview: true
+        userId: 1,
+        status: 'attending'
       },
       {
         eventId: 2,
-        url: 'image url',
-        preview: false
+        userId: 1,
+        status: 'waitlist'
       },
       {
         eventId: 3,
-        url: 'image url',
-        preview: true
-      },
-      {
-        eventId: 3,
-        url: 'image url',
-        preview: false
+        userId: 2,
+        status: 'pending'
       },
       {
         eventId: 4,
-        url: 'image url',
-        preview: true
+        userId: 3,
+        status: 'attending'
       },
+      {
+        eventId: 5,
+        userId: 3,
+        status: 'waitlist'
+      }
     ])
   },
 
   async down (queryInterface, Sequelize) {
-    options.tableName = 'EventImages';
+    options.tableName = 'Attendance';
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(options, {
-      eventId: { [Op.in]: [1, 2, 3, 4, 5]}
+      userId: { [Op.in]: [1, 2, 3]}
     }, {});
   }
 };
