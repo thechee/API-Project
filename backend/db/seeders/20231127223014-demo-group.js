@@ -23,7 +23,7 @@ module.exports = {
       {
         organizerId: 1,
         name: 'Cat Lovers',
-        about: 'Lets chat about our cats!',
+        about: 'Lets chat about our cats! I need to get this text to be at least 50 characters ',
         type: 'Online',
         private: false,
         city: 'Los Angeles',
@@ -32,7 +32,7 @@ module.exports = {
       {
         organizerId: 2,
         name: 'Art Snobs',
-        about: 'We got to galleries and thumb our noses at everything',
+        about: 'We got to galleries and thumb our noses at everything. We are the snobbiest and coolest.',
         type: 'In person',
         private: true,
         city: 'Milwaukee',
