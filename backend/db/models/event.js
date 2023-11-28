@@ -46,10 +46,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        len: [5, 255]
+      }
     },
     description: {
-      type: DataTypes.TEXT
+      type: DataTypes.TEXT,
+      allowNull: false
     },
     type: {
       type: DataTypes.ENUM('In person', 'Online')
@@ -58,13 +62,26 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER
     },
     price: {
-      type: DataTypes.INTEGER
+      type: DataTypes.DECIMAL(10, 2)
     },
     startDate: {
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
+      validate: {
+        isDate: true,
+        isAfter: new Date().toJSON().slice(0, 10)
+      }
     },
     endDate: {
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
+      validate: {
+        // notBeforeStartDate(value) {
+        //   if (value < this.startDate) {
+        //     throw new Error('End date cannot be before the start date')
+        //   }
+        // }
+        isDate: true,
+        isAfter: this.startDate
+      }
     }
   }, {
     sequelize,
