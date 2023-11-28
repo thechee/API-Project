@@ -56,7 +56,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     type: {
-      type: DataTypes.ENUM('In person', 'Online')
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isValidType(value) {
+          const validTypes = ['In person', 'Online'];
+          if (!validTypes.includes(value)) {
+            throw new Error("Type must be 'Online' or 'In person'")
+          }
+        }
+      }
     },
     capacity: {
       type: DataTypes.INTEGER

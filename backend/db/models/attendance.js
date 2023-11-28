@@ -26,7 +26,18 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Users'
       }
     },
-    status: DataTypes.ENUM('attending', 'waitlist', 'pending')
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isValidType(value) {
+          const validTypes = ['attending', 'waitlist', 'pending'];
+          if (!validTypes.includes(value)) {
+            throw new Error("Status must be attending, waitlist, or pending'")
+          }
+        }
+      }
+    }
   }, {
     sequelize,
     modelName: 'Attendance',
