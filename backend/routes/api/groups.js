@@ -25,9 +25,26 @@ const validateGroupData = [
   check('state')
     .exists({ checkFalsy: true })
     .withMessage("State is required"),
-    handleValidationErrors
+  handleValidationErrors
 ]
-
+const validateVenueData = [
+  check('address')
+    .exists({ checkFalsy: true })
+    .withMessage("Stress address is required"),
+  check('city')
+    .exists({ checkFalsy: true })
+    .withMessage("City is required"),
+  check('state')
+    .exists({ checkFalsy: true })
+    .withMessage("State is required"),
+  check('lat')
+    .exists({ checkFalsy: true })
+    .withMessage("Latitude is not valid"),
+  check('lng')
+    .exists({ checkFalsy: true })
+    .withMessage("Longitude is not valid"),
+  handleValidationErrors
+]
 
 router.get('/current', requireAuth, async (req, res) => {
   const { user } = req
@@ -67,6 +84,54 @@ router.get('/current', requireAuth, async (req, res) => {
   res.json({
     Groups: groupsList
   })
+})
+
+router.get('/:groupId/venues', requireAuth, async (req, res) => {
+  const { groupId } = req.params
+  const { user } = req;
+  
+  const group = await Group.findByPk(groupId)
+  if (!group) {
+    res.status(404);
+    res.json(
+      { message: "Group couldn't be found" }
+    )
+  }
+
+  const cohost = await User.findByPk(user.id, {
+    include: {
+      model: Membership,
+      attributes: ['groupId', 'status'],
+      where: {
+        groupId: groupId,
+        status: 'co-host'
+      }
+    }
+  })
+
+  // console.log(cohost.toJSON().Memberships)
+
+  console.log('organizerId: ', group.organizerId)
+  console.log('userId: ', user.id)
+  if (group.organizerId === user.id || cohost !== null) {
+    const venues = await Venue.findAll({
+      where: {
+        groupId
+      },
+      attributes: {
+        exclude: ['createdAt', 'updatedAt']
+      }
+    })
+
+    res.json({
+      Venues: venues
+    })
+  } else {
+    res.status(403);
+    res.json({
+      message: "Forbidden"
+    })
+  }
 })
 
 router.get('/:groupId', async (req, res) => {
@@ -177,6 +242,53 @@ router.post('/:groupId/images', requireAuth, async (req, res) => {
       url: newImage.url,
       preview: newImage.preview
     })
+  } else {
+    res.status(403);
+    res.json({
+      message: "Forbidden"
+    })
+  }
+})
+
+router.post('/:groupId/venues', requireAuth, validateVenueData, async (req, res) => {
+  const { groupId } = req.params
+  const { user } = req;
+  const { address, city, state, lat, lng } = req.body;
+  
+  const group = await Group.findByPk(groupId)
+  if (!group) {
+    res.status(404);
+    res.json(
+      { message: "Group couldn't be found" }
+    )
+  }
+
+  const cohost = await User.findByPk(user.id, {
+    include: {
+      model: Membership,
+      attributes: ['groupId', 'status'],
+      where: {
+        groupId: groupId,
+        status: 'co-host'
+      }
+    }
+  })
+
+  if (group.organizerId === user.id || cohost !== null) {
+    const newVenue = await group.createVenue({
+      address,
+      city,
+      state,
+      lat,
+      lng
+    })
+
+    let newVenueObj = newVenue.toJSON()
+    delete newVenueObj.groupId
+    delete newVenueObj.updatedAt
+    delete newVenueObj.createdAt
+    
+    res.json(newVenueObj)
   } else {
     res.status(403);
     res.json({
