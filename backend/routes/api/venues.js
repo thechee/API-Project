@@ -15,11 +15,13 @@ const validateVenueData = [
   check('state')
     .exists({ checkFalsy: true })
     .withMessage("State is required"),
-  check('lat')
+    check('lat')
     .exists({ checkFalsy: true })
+    .isFloat({ max: 90, min: -90 })
     .withMessage("Latitude is not valid"),
   check('lng')
     .exists({ checkFalsy: true })
+    .isFloat({ max: 180, min: -180 })
     .withMessage("Longitude is not valid"),
   handleValidationErrors
 ]
@@ -40,7 +42,7 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
       { message: "Venue couldn't be found" }
     )
   }
-  const venueObj = venue.toJSON();
+  // const venueObj = venue.toJSON();
 
   const cohost = await User.findByPk(user.id, {
     include: {
@@ -54,7 +56,7 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
   });
 
   if (venue.Group.organizerId === user.id || cohost !== null) {
-    await venue.update({
+    const editedVenue = await venue.update({
       address,
       city,
       state,
@@ -62,11 +64,20 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
       lng
     });
 
-    delete venueObj.updatedAt;
-    delete venueObj.createdAt;
-    delete venueObj.Group;
-    
-    res.json(venueObj)
+    // delete venueObj.updatedAt;
+    // delete venueObj.createdAt;
+    // delete venueObj.Group;
+    const returnVenue = editedVenue.toJSON()
+
+    res.json({
+      id: returnVenue.id,
+      groupId: returnVenue.groupId,
+      address: returnVenue.address,
+      city: returnVenue.city,
+      state: returnVenue.state,
+      lat: returnVenue.lat,
+      lng: returnVenue.lng
+    })
   } else {
     res.status(403);
     res.json({

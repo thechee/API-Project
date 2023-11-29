@@ -43,9 +43,11 @@ const validateVenueData = [
     .withMessage("State is required"),
   check('lat')
     .exists({ checkFalsy: true })
+    .isFloat({ max: 90, min: -90 })
     .withMessage("Latitude is not valid"),
   check('lng')
     .exists({ checkFalsy: true })
+    .isFloat({ max: 180, min: -180 })
     .withMessage("Longitude is not valid"),
   handleValidationErrors
 ]
@@ -61,37 +63,18 @@ router.get('/current', requireAuth, async (req, res) => {
   })
 
   const groups = await Group.findAll({
-    include: [
-      // {
-      //   model: GroupImage,
-      //   attributes: ['url'],
-      //   // where: {
-      //   //   preview: true
-      //   // }
-      // }, 
-      // {
-      //   model: User,
-      //   // as: 'numMembers'
-      //   as: 'Orgs'
-      // }
-      // ,
-      { 
-        model: Membership,
-        where: {
-          userId: user.id,
-          // status: {
-          //   [Op.in]: ['co-host', 'member']
-          // }
-        }
+    include: { 
+      model: Membership,
+      where: {
+        userId: user.id,
       }
-    ]
+    }
   })
 
   const groupIds = []
   groups.forEach(group => {
     groupIds.push(group.id)
   })
-
   ownedGroups.forEach(group => {
     groupIds.push(group.id)
   })  
@@ -114,7 +97,6 @@ router.get('/current', requireAuth, async (req, res) => {
   });
 
   // *** TO DO remove duplicates if they exists
-  console.log(allGroups)
 
   let groupsList = [];
 
@@ -190,8 +172,8 @@ router.get('/:groupId', async (req, res) => {
   let group = await Group.findByPk(groupId, {
     include: [
       {
-        model: User,
-        as: 'numMembers'
+        model: Membership,
+        // as: 'numMembers'
       },
       {
         model: GroupImage,
@@ -222,7 +204,8 @@ router.get('/:groupId', async (req, res) => {
     )
   }
   group = group.toJSON()
-  group.numMembers = group.numMembers.length
+  group.numMembers = group.Memberships.length
+  delete group.Memberships
   // group.Organizer = group.User
   // delete group.User
 

@@ -8,7 +8,7 @@ const { handleValidationErrors } = require('../../utils/validation');
 router.get('/', async (req, res) => {
   const events = await Event.findAll({
     attributes: {
-      exclude: ['price', 'capacity']
+      exclude: ['price', 'capacity', 'description']
     },
     include: [
       {
