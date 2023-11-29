@@ -11,6 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+
+      Membership.belongsTo(models.Group, {
+        foreignKey: 'groupId'
+      })
+
+      Membership.belongsTo(models.User, {
+        foreignKey: 'userId'
+      })
     }
   }
   Membership.init({
@@ -33,9 +41,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       validate: {
         isValidType(value) {
-          const validTypes = ['attending', 'waitlist', 'pending'];
+          const validTypes = ['co-host', 'member', 'pending'];
           if (!validTypes.includes(value)) {
-            throw new Error("Status must be attending, waitlist, or pending'")
+            throw new Error("Status must be co-host, member, or pending'")
           }
         }
       }

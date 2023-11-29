@@ -41,7 +41,7 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
     )
   }
   const venueObj = venue.toJSON();
-  console.log(venueObj)
+
   const cohost = await User.findByPk(user.id, {
     include: {
       model: Membership,

@@ -4,17 +4,21 @@ const { Group, User, Membership, GroupImage, Venue } = require('../../db/models'
 const { requireAuth } = require('../../utils/auth')
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
+const { Op } = require('sequelize');
 
 const validateGroupData = [
   check('name')
     .exists({ checkFalsy: true })
+    .isLength({ max: 60 })
     .withMessage("Name must be 60 characters or less"),
   check('about')
     .exists({ checkFalsy: true })
+    .isLength({ min: 50 })
     .withMessage("About must be 50 characters or more"),
   check('type')
     .exists({ checkFalsy: true })
-    .withMessage("Type most be 'Online' of 'In person"),
+    .isIn(['Online', 'In person'])
+    .withMessage("Type must be 'Online' or 'In person"),
   check('private')
     .exists()
     .isBoolean()
@@ -48,37 +52,85 @@ const validateVenueData = [
 
 router.get('/current', requireAuth, async (req, res) => {
   const { user } = req
+  console.log(user.id)
 
-  const groups = await Group.findAll({
+  const ownedGroups = await Group.findAll({
     where: {
       organizerId: user.id
-    },
+    }
+  })
+
+  const groups = await Group.findAll({
     include: [
-      {
-        model: GroupImage,
-        attributes: ['url'],
+      // {
+      //   model: GroupImage,
+      //   attributes: ['url'],
+      //   // where: {
+      //   //   preview: true
+      //   // }
+      // }, 
+      // {
+      //   model: User,
+      //   // as: 'numMembers'
+      //   as: 'Orgs'
+      // }
+      // ,
+      { 
+        model: Membership,
         where: {
-          preview: true
+          userId: user.id,
+          // status: {
+          //   [Op.in]: ['co-host', 'member']
+          // }
         }
-      }, 
-      {
-        model: User,
-        as: 'numMembers'
       }
     ]
   })
-  
-  let groupsList = [];
+
+  const groupIds = []
   groups.forEach(group => {
+    groupIds.push(group.id)
+  })
+
+  ownedGroups.forEach(group => {
+    groupIds.push(group.id)
+  })  
+  
+  // Get all the groups with the ids the user is associated with
+  const allGroups = await Group.findAll({
+    where: {
+        id: {
+            [Op.in]: [...groupIds]
+        }
+    },
+    include: [
+      {
+        model: Membership
+      },
+      {
+        model: GroupImage
+      }
+    ]
+  });
+
+  // *** TO DO remove duplicates if they exists
+  console.log(allGroups)
+
+  let groupsList = [];
+
+  allGroups.forEach(group => {
     groupsList.push(group.toJSON())
   })
 
   groupsList.forEach(group => {
     if (group.GroupImages[0]) {
       group.previewImage = group.GroupImages[0].url;
+    } else {
+      group.previewImage = 'No preview available';
     }
-    delete group.GroupImages
-    group.numMembers = group.numMembers.length
+    delete group.GroupImages;
+    group.numMembers = group.Memberships.length;
+    delete group.Memberships;
   })
 
   res.json({
@@ -108,8 +160,6 @@ router.get('/:groupId/venues', requireAuth, async (req, res) => {
       }
     }
   })
-
-  // console.log(cohost.toJSON().Memberships)
 
   console.log('organizerId: ', group.organizerId)
   console.log('userId: ', user.id)
@@ -167,7 +217,7 @@ router.get('/:groupId', async (req, res) => {
 
   if (!group) {
     res.status(404);
-    res.json(
+    return res.json(
       { message: "Group couldn't be found" }
     )
   }
@@ -189,7 +239,7 @@ router.get('/', async (req, res) => {
       }, 
       {
         model: User,
-        as: 'numMembers'
+        as: 'Organizer'
       }
     ]
   })
@@ -200,9 +250,8 @@ router.get('/', async (req, res) => {
   })
 
   groupsList.forEach(group => {
-    if (group.GroupImages.length) {
+    if (group.GroupImages?.length) {
       for (let i = 0; i < group.GroupImages.length; i++) {
-        console.log(group.GroupImages)
         if (group.GroupImages[i].preview === true) {
           group.previewImage = group.GroupImages[i].url
           break;
@@ -210,7 +259,7 @@ router.get('/', async (req, res) => {
       }
     }
     delete group.GroupImages
-    group.numMembers = group.numMembers.length
+    group.Organizer = group.Organizer.length
   })
 
   res.json({
@@ -330,14 +379,15 @@ router.put('/:groupId', requireAuth, validateGroupData, async (req, res) => {
   }
 
   if (user.id === group.organizerId) {
-    
-    group = group.toJSON()
-    group.name = name;
-    group.about = about;
-    group.type = type;
-    group.private = private;
-    group.city = city;
-    group.state = state;
+
+    await group.update({
+      name,
+      about,
+      type,
+      private,
+      city,
+      state
+    })
 
     res.json(group)
   } else {
