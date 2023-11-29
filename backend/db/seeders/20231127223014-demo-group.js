@@ -18,7 +18,7 @@ module.exports = {
         type: 'In person',
         private: false,
         city: 'Fairbanks',
-        state: 'Alaska'
+        state: 'AK'
       },
       {
         organizerId: 1,
@@ -27,7 +27,7 @@ module.exports = {
         type: 'Online',
         private: false,
         city: 'Los Angeles',
-        state: 'California'
+        state: 'CA'
       },
       {
         organizerId: 2,
@@ -36,7 +36,7 @@ module.exports = {
         type: 'In person',
         private: true,
         city: 'Milwaukee',
-        state: 'Wisconsin'
+        state: 'WI'
       }
     ])
   },

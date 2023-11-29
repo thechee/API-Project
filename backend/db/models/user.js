@@ -1,3 +1,4 @@
+
 'use strict';
 const {
   Model,
@@ -26,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
         through: 'Membership',
         foreignKey: 'userId',
         otherKey: 'groupId'
+      })
+
+      User.hasMany(models.Membership, {
+        foreignKey: 'userId'
       })
     }
   }
