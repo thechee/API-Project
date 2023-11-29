@@ -54,7 +54,6 @@ const validateVenueData = [
 
 router.get('/current', requireAuth, async (req, res) => {
   const { user } = req
-  console.log(user.id)
 
   const ownedGroups = await Group.findAll({
     where: {
@@ -143,8 +142,6 @@ router.get('/:groupId/venues', requireAuth, async (req, res) => {
     }
   })
 
-  console.log('organizerId: ', group.organizerId)
-  console.log('userId: ', user.id)
   if (group.organizerId === user.id || cohost !== null) {
     const venues = await Venue.findAll({
       where: {
@@ -221,8 +218,7 @@ router.get('/', async (req, res) => {
         attributes: ['url', 'preview']
       }, 
       {
-        model: User,
-        as: 'Organizer'
+        model: Membership
       }
     ]
   })
@@ -242,7 +238,8 @@ router.get('/', async (req, res) => {
       }
     }
     delete group.GroupImages
-    group.Organizer = group.Organizer.length
+    group.numMembers = group.Memberships.length
+    delete group.Memberships
   })
 
   res.json({
