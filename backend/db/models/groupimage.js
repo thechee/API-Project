@@ -12,7 +12,9 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       GroupImage.belongsTo(models.Group, {
-        foreignKey: 'groupId'
+        foreignKey: 'groupId',
+        onDelete: 'CASCADE',
+        hooks: true
       })
     }
   }
@@ -21,7 +23,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       references: {
         model: 'Groups'
-      }
+      },
+      onDelete: 'CASCADE',
+      hooks: true
     },
     url: DataTypes.STRING,
     preview: DataTypes.BOOLEAN

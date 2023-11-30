@@ -27,14 +27,18 @@ module.exports = (sequelize, DataTypes) => {
       references: {
         model: 'Users'
       },
-      allowNull: false
+      allowNull: false,
+      onDelete: 'CASCADE',
+      hooks: true
     },
     groupId: {
       type: DataTypes.INTEGER,
       references: {
         model: 'Groups'
       },
-      allowNull: false
+      allowNull: false,
+      onDelete: 'CASCADE',
+      hooks: true
     },
     status: {
       type: DataTypes.STRING,
