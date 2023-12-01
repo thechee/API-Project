@@ -43,12 +43,14 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
       { message: "Venue couldn't be found" }
     )
   }
- 
+
   const cohost = await User.findByPk(user.id, {
-    model: Membership,
-    where: {
-      groupId: venue.Group.groupId,
-      status: 'co-host'
+    include: {
+      model: Membership,
+      where: {
+        groupId: venue.groupId,
+        status: 'co-host'
+      }
     }
   });
 
