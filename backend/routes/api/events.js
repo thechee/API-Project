@@ -4,8 +4,40 @@ const { Group, User, Membership, GroupImage, Venue, Event, EventImage, Attendanc
 const { requireAuth } = require('../../utils/auth')
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
-const membership = require('../../db/models/membership');
-const attendance = require('../../db/models/attendance');
+
+const validateQueryParameters = [
+  check('page')
+    .custom((value) => {
+      if (value === undefined) return true;
+      if (value >= 1 && value <= 10) return true;
+    })
+    .withMessage("Page must be greater than or equal to 1"),
+  check('size')
+    .custom((value) => {
+      if (value === undefined) return true;
+      if (value >= 1 && value <= 20) return true;
+    })
+    .withMessage("Size must be greater than or equal to 1"),
+  check('name')
+    .custom((value) => {
+      if (value === undefined) return true
+      if (value === value.toString()) return true
+    })
+    .withMessage("Name must be a string"),
+  check('type')
+    .custom((value) => {
+      if (value === undefined) return true
+      if (value.includes('Online') || value.includes('In person')) return true
+    })
+    .withMessage("Type must be 'Online' or 'In person'"),
+  check('startDate')
+    .custom((value) => {
+      if (value === undefined) return true
+      if ((new Date(value)).getDate()) return true
+    })
+    .withMessage("Start date must be a valid datetime"),
+  handleValidationErrors
+]
 
 router.get('/:eventId/attendees', async (req, res) => {
   const { user } = req;
@@ -102,7 +134,33 @@ router.get('/:eventId', async (req, res) => {
   res.json(eventObj)
 })
 
-router.get('/', async (req, res) => {
+router.get('/', validateQueryParameters, async (req, res) => {
+  let { page, size, name, type, startDate } = req.query;
+
+  page = parseInt(page) || 1
+  size = parseInt(size) || 20
+  
+  // console.log('page:', page)
+  // console.log('size:', size)
+  // console.log('name:', name)
+  // console.log('name:', name)
+  // console.log('Start Date:', startDate)
+
+
+  const queries = {
+      where: {
+        name,
+        type,
+        startDate
+      },
+      limit: size,
+      offset: size * (page - 1)
+  }
+
+  if (!name) delete queries.where.name
+  if (!type) delete queries.where.type
+  if (!startDate) delete queries.where.startDate
+
   const events = await Event.findAll({
     include: [
       {
@@ -124,7 +182,8 @@ router.get('/', async (req, res) => {
         model: Venue,
         attributes: ['id', 'city', 'state']
       }
-    ]
+    ],
+    ...queries
   })
 
   let eventList = [];
