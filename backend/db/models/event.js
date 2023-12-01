@@ -16,11 +16,13 @@ module.exports = (sequelize, DataTypes) => {
       })
 
       Event.belongsTo(models.Group, {
-        foreignKey: 'groupId'
+        foreignKey: 'groupId',
       })
 
       Event.hasMany(models.EventImage, {
-        foreignKey: 'eventId'
+        foreignKey: 'eventId',
+        onDelete: 'CASCADE',
+        hooks: true
       })
 
       Event.belongsToMany(models.User, {
@@ -36,14 +38,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       references: {
         model: 'Venues'
-      }
+      },
+      onDelete: 'SET NULL',
     },
     groupId: {
       type: DataTypes.INTEGER,
       references: {
         model: 'Groups'
       },
-      allowNull: false
+      allowNull: false,
+      onDelete: 'CASCADE',
+      hooks: true
     },
     name: {
       type: DataTypes.STRING,
@@ -90,12 +95,16 @@ module.exports = (sequelize, DataTypes) => {
         //   }
         // }
         isDate: true,
-        isAfter: this.startDate
       }
     }
   }, {
     sequelize,
     modelName: 'Event',
+    defaultScope: {
+      attributes: {
+        exclude: ['price', 'capacity', 'description', 'createdAt', 'updatedAt']
+      }
+    }
   });
   return Event;
 };

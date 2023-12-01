@@ -36,22 +36,19 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
       model: Group
     }
   })
+
   if (!venue) {
     res.status(404);
     res.json(
       { message: "Venue couldn't be found" }
     )
   }
-  // const venueObj = venue.toJSON();
-
+ 
   const cohost = await User.findByPk(user.id, {
-    include: {
-      model: Membership,
-      attributes: ['groupId', 'status'],
-      where: {
-        groupId: venue.groupId,
-        status: 'co-host'
-      }
+    model: Membership,
+    where: {
+      groupId: venue.Group.groupId,
+      status: 'co-host'
     }
   });
 
@@ -64,9 +61,6 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
       lng
     });
 
-    // delete venueObj.updatedAt;
-    // delete venueObj.createdAt;
-    // delete venueObj.Group;
     const returnVenue = editedVenue.toJSON()
 
     res.json({

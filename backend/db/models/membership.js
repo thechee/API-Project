@@ -27,14 +27,18 @@ module.exports = (sequelize, DataTypes) => {
       references: {
         model: 'Users'
       },
-      allowNull: false
+      allowNull: false,
+      onDelete: 'CASCADE',
+      hooks: true
     },
     groupId: {
       type: DataTypes.INTEGER,
       references: {
         model: 'Groups'
       },
-      allowNull: false
+      allowNull: false,
+      onDelete: 'CASCADE',
+      hooks: true
     },
     status: {
       type: DataTypes.STRING,
@@ -44,6 +48,11 @@ module.exports = (sequelize, DataTypes) => {
           const validTypes = ['co-host', 'member', 'pending'];
           if (!validTypes.includes(value)) {
             throw new Error("Status must be co-host, member, or pending'")
+          }
+        },
+        notToPending(value) {
+          if (value == 'pending' && (this.status == 'member' || this.status == 'co-host')) {
+            throw new Error('Cannot change a membership status to pending')
           }
         }
       }
