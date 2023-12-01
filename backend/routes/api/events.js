@@ -11,9 +11,9 @@ router.get('/', async (req, res) => {
       {
         model: EventImage,
         attributes: ['url'],
-        where: {
-          preview: true
-        }
+        // where: {
+        //   preview: true
+        // }
       }, 
       {
         model: User,
@@ -30,10 +30,14 @@ router.get('/', async (req, res) => {
     ]
   })
 
+  console.log(events)
+
   let eventList = [];
   events.forEach(event => {
     eventList.push(event.toJSON())
   })
+
+  console.log(eventList)
 
   eventList.forEach(event => {
     if (event.EventImages[0]) {

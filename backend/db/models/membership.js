@@ -49,6 +49,11 @@ module.exports = (sequelize, DataTypes) => {
           if (!validTypes.includes(value)) {
             throw new Error("Status must be co-host, member, or pending'")
           }
+        },
+        notToPending(value) {
+          if (value == 'pending' && (this.status == 'member' || this.status == 'co-host')) {
+            throw new Error('Cannot change a membership status to pending')
+          }
         }
       }
     }

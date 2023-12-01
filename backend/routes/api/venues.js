@@ -36,6 +36,7 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
       model: Group
     }
   })
+
   if (!venue) {
     res.status(404);
     res.json(
@@ -46,7 +47,7 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
   const cohost = await User.findByPk(user.id, {
     model: Membership,
     where: {
-      groupId: eventObj.groupId,
+      groupId: venue.Group.groupId,
       status: 'co-host'
     }
   });
