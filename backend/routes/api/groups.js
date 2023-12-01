@@ -546,7 +546,7 @@ router.post('/:groupId/membership', requireAuth, async (req, res) => {
       userId: user.id
     }
   })
-  console.log(userStatus.toJSON())
+  // console.log(userStatus.toJSON())
 
   if (!userStatus) {
     const newMembership = await group.createMembership({
