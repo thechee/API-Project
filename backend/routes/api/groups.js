@@ -183,14 +183,20 @@ router.get('/:groupId/venues', requireAuth, async (req, res) => {
   }
 
   const cohost = await User.findByPk(user.id, {
-    model: Membership,
-    where: {
-      groupId,
-      status: 'co-host'
+    include: {
+      model: Membership,
+      where: {
+        groupId,
+        status: 'co-host'
+      }
     }
   })
+  // console.log(currentUser.toJSON())
+  // console.log(group.toJSON())
+  // console.log(cohost !== null)
+  // console.log(group.organizerId == user.id)
 
-  if (group.organizerId === user.id || cohost !== null) {
+  if (group.organizerId == user.id || cohost !== null) {
     const venues = await Venue.findAll({
       where: {
         groupId
@@ -199,8 +205,7 @@ router.get('/:groupId/venues', requireAuth, async (req, res) => {
         exclude: ['createdAt', 'updatedAt']
       }
     })
-
-    res.json({
+    return res.json({
       Venues: venues
     })
   } else {
@@ -469,10 +474,12 @@ router.post('/:groupId/venues', requireAuth, validateVenueData, async (req, res)
   }
 
   const cohost = await User.findByPk(user.id, {
-    model: Membership,
-    where: {
-      groupId,
-      status: 'co-host'
+    include: {
+      model: Membership,
+      where: {
+        groupId,
+        status: 'co-host'
+      }
     }
   })
 
@@ -500,10 +507,10 @@ router.post('/:groupId/venues', requireAuth, validateVenueData, async (req, res)
 
 router.post('/:groupId/events', requireAuth, validateEventData, async (req, res) => {
   const { groupId } = req.params
+  const { user } = req;
   let { venueId, name, type, capacity, price, description, startDate, endDate } = req.body;
 
   const group = await Group.findByPk(groupId)
-
   if (!group) {
     res.status(404)
     return res.json({
@@ -511,22 +518,40 @@ router.post('/:groupId/events', requireAuth, validateEventData, async (req, res)
     })
   }
 
-  const newEvent = await group.createEvent({
-    venueId,
-    name,
-    type,
-    capacity,
-    price,
-    description,
-    startDate,
-    endDate
+  // find if organizer
+  const cohost = await User.findByPk(user.id, {
+    include: {
+      model: Membership,
+      where: {
+        groupId,
+        status: 'co-host'
+      }
+    }
   })
 
-  newEventObj = newEvent.toJSON()
-  delete newEventObj.updatedAt
-  delete newEventObj.createdAt
+  if (group.organizerId == user.id || cohost !== null) {
+    const newEvent = await group.createEvent({
+      venueId,
+      name,
+      type,
+      capacity,
+      price,
+      description,
+      startDate,
+      endDate
+    })
 
-  res.json(newEventObj)
+    newEventObj = newEvent.toJSON()
+    delete newEventObj.updatedAt
+    delete newEventObj.createdAt
+
+    res.json(newEventObj)
+  } else {
+    res.status(403);
+    res.json({
+      message: "Forbidden"
+    })
+  }
 })
 
 router.post('/:groupId/membership', requireAuth, async (req, res) => {

@@ -227,14 +227,15 @@ router.post('/:eventId/attendance', requireAuth, async (req, res) => {
   })
   const currentUserObj = currentUser.toJSON()
   // check to see if currentUser is a member of the group
-  let isMember;
+  let isMember = [];
   currentUserObj.Memberships.forEach(membership => {
     if (membership.groupId === group.id) {
-      isMember = true;
+      isMember.push(true);
     }
   })
+  // console.log(isMember)
   // if they are not a member of the group, FORBIDDEN
-  if (!isMember) {
+  if (!isMember.length) {
     res.status(403);
     return res.json({
       message: "Forbidden"
@@ -287,22 +288,20 @@ router.post('/:eventId/images', requireAuth, async (req, res) => {
     })
   }
   const eventObj = event.toJSON()
-
-  const host = await User.findByPk(user.id, {
+  const currentUser = await User.findByPk(user.id)
+  const group = await Group.findByPk(eventObj.groupId, {
     include: {
-      model: Group,
-      where: {
-        organizerId: user.id,
-        id: eventObj.groupId
-      }
+      model: Membership
     }
   })
-  
+
   const cohost = await User.findByPk(user.id, {
-    model: Membership,
-    where: {
-      groupId: eventObj.groupId,
-      status: 'co-host'
+    include: {
+      model: Membership,
+      where: {
+        groupId: eventObj.groupId,
+        status: 'co-host'
+      }
     }
   });
   
@@ -313,6 +312,12 @@ router.post('/:eventId/images', requireAuth, async (req, res) => {
       status: 'attending'
     }
   })
+  // console.log(currentUser.toJSON())
+  // console.log('group:', group.toJSON())
+  // // console.log(cohost)
+  // // console.log(attendee)
+  
+  const host = currentUser.id == group.organizerId
 
   if (host || cohost || attendee.length) {
     const image = await event.createEventImage({
@@ -341,7 +346,7 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
   // Edge case: req.body.status is "pending"
   // 400 "message": "Cannot change an attendance status to pending"
   if (status === 'pending') {
-    res.status(400).json({
+    return res.status(400).json({
       message: "Cannot change an attendance status to pending"
     })
   }
@@ -349,7 +354,7 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
   // 404 "message": "Event couldn't be found"
   const event = await Event.findByPk(eventId)
   if (!event) {
-    res.status(404).json({
+    return res.status(404).json({
       message: "Event couldn't be found"
     })
   }
@@ -371,7 +376,12 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
       model: Attendance
     }
   })
-
+  if (!reqBodyUser) {
+    return res.status(404).json({
+      message: "Attendance between the user and the event does not exist"
+    })
+  }
+  // console.log(reqBodyUser)
   // get the record of the reqBodyUser that matches this event so we can update it later
   let attending = [];
   reqBodyUser.Attendances.forEach(attendance => {
@@ -380,7 +390,7 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
       attending.push(attendance)
     }
   })
-  
+
   if (!attending.length) {
     return res.status(404).json({
       message: "Attendance between the user and the event does not exist"
@@ -437,7 +447,6 @@ router.put('/:eventId', requireAuth, async (req, res) => {
   }
 
   const event = await Event.findByPk(eventId)
-
   if(!event) {
     res.status(404)
     res.json({
@@ -446,22 +455,17 @@ router.put('/:eventId', requireAuth, async (req, res) => {
   }
 
   const eventObj = event.toJSON()
+  const group = await Group.findByPk(event.groupId)
 
-  const host = await User.findByPk(user.id, {
-    include: {
-      model: Group,
-      where: {
-        organizerId: user.id,
-        id: eventObj.groupId
-      }
-    }
-  })
+  const host = group.organizerId == user.id
   
   const cohost = await User.findByPk(user.id, {
-    model: Membership,
-    where: {
-      groupId: eventObj.groupId,
-      status: 'co-host'
+    include: {
+      model: Membership,
+      where: {
+        groupId: eventObj.groupId,
+        status: 'co-host'
+      }
     }
   });
 
@@ -565,37 +569,39 @@ router.delete('/:eventId', requireAuth, async (req, res) => {
   const { user } = req;
 
   const event = await Event.findByPk(eventId)
-
   if(!event) {
     res.status(404)
     res.json({
       message: "Event couldn't be found"
     })
   }
-
   const eventObj = event.toJSON()
-  console.log(eventObj)
-  // console.log(user.toJSON())
+  const group = await Group.findByPk(event.groupId)
+  // console.log(eventObj)
+  // // console.log(user.toJSON())
 
-  const host = await User.findByPk(user.id, {
-    include: {
-      model: Group,
-      where: {
-        organizerId: user.id,
-        id: eventObj.groupId
-      }
-    }
-  })
+  // const host = await User.findByPk(user.id, {
+  //   include: {
+  //     model: Group,
+  //     where: {
+  //       organizerId: user.id,
+  //       id: eventObj.groupId
+  //     }
+  //   }
+  // })
 
   const cohost = await User.findByPk(user.id, {
-    model: Membership,
-    where: {
-      groupId: eventObj.groupId,
-      status: 'co-host'
+    include: {
+      model: Membership,
+      where: {
+        groupId: eventObj.groupId,
+        status: 'co-host'
+      }
     }
   });
 
-  // console.log(host.toJSON())
+  const host = group.organizerId == user.id
+  // console.log(host)
   // console.log(cohost.toJSON())
 
   if (host || cohost) {
