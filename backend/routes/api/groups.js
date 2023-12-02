@@ -652,11 +652,7 @@ router.put('/:groupId/membership', requireAuth, async (req, res) => {
   
   // find if the member exists at all in any group
   const userExists = await User.findByPk(memberId)
-  //   {
-  //   where: {
-  //     userId: memberId
-  //   }
-  // })
+
   // member must at least exist somewhere
   if (!userExists) {
     return res.status(400).json({
@@ -772,6 +768,17 @@ router.delete('/:groupId/membership', requireAuth, async (req, res) => {
     })
   }
 
+  const userExists = await User.findByPk(memberId)
+  
+  if (!userExists) {
+    return res.status(400).json({
+      message: "Validation Error",
+      errors: {
+        memberId: "User couldn't be found"
+      }
+    })
+  }
+
   // find if member has a membership with the group
   const membership = await Membership.findOne({
     where: {
@@ -788,24 +795,7 @@ router.delete('/:groupId/membership', requireAuth, async (req, res) => {
       message: "Membership does not exist for this User"
     })
   }
-
-  const memberIdExists = await Membership.findOne({
-    where: {
-      userId: memberId
-    }
-  })
-  if (!memberIdExists) {
-    return res.status(400).json({
-      message: "Validation Error",
-      errors: {
-        memberId: "User couldn't be found"
-      }
-    })
-  }
-  
-  // console.log(membership.toJSON())
-  // console.log(memberId)
-  // console.log(user.id === memberId)
+ 
   // if current user is organizer of group OR is the memberID being deleted
   if (user.id == group.organizerId || user.id === memberId) {
     await membership.destroy()
