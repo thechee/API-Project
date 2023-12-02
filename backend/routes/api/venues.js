@@ -39,7 +39,7 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
 
   if (!venue) {
     res.status(404);
-    res.json(
+    return res.json(
       { message: "Venue couldn't be found" }
     )
   }
@@ -65,7 +65,7 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
 
     const returnVenue = editedVenue.toJSON()
 
-    res.json({
+    return res.json({
       id: returnVenue.id,
       groupId: returnVenue.groupId,
       address: returnVenue.address,
@@ -76,7 +76,7 @@ router.put('/:venueId', requireAuth, validateVenueData, async (req, res) => {
     })
   } else {
     res.status(403);
-    res.json({
+    return res.json({
       message: "Forbidden"
     })
   }
