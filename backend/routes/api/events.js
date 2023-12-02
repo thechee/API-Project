@@ -4,6 +4,7 @@ const { Group, User, Membership, GroupImage, Venue, Event, EventImage, Attendanc
 const { requireAuth } = require('../../utils/auth')
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
+const { Op } = require('sequelize');
 
 const validateQueryParameters = [
   check('page')
@@ -45,7 +46,7 @@ router.get('/:eventId/attendees', async (req, res) => {
 
   const event = await Event.findByPk(eventId)
   if (!event) {
-    res.status(404).json({
+    return res.status(404).json({
       message: "Event couldn't be found"
     })
   }
@@ -61,7 +62,6 @@ router.get('/:eventId/attendees', async (req, res) => {
     // if currentUser's membership's groupId matches the event's group
     // and currentUser's membership's status in this group is cohost'
     if (membership.groupId === group.id && membership.status == 'co-host') {
-      // console.log(true);
       cohost.push(true)
     }
   })
@@ -124,14 +124,14 @@ router.get('/:eventId', async (req, res) => {
   
   if (!event) {
     res.status(404)
-    res.json({
+    return res.json({
       message: "Event couldn't be found"
     })
   }
   const eventObj = event.toJSON()
   eventObj.numAttending = eventObj.numAttending.length
   
-  res.json(eventObj)
+  return res.json(eventObj)
 })
 
 router.get('/', validateQueryParameters, async (req, res) => {
@@ -139,19 +139,20 @@ router.get('/', validateQueryParameters, async (req, res) => {
 
   page = parseInt(page) || 1
   size = parseInt(size) || 20
-  
-  // console.log('page:', page)
-  // console.log('size:', size)
-  // console.log('name:', name)
-  // console.log('name:', name)
-  // console.log('Start Date:', startDate)
 
+  if (name) name = name.replace(/"/g,"")
+  if (type) type = type.replace(/"/g,"")
+  if (startDate) startDate = startDate.replace(/"/g,"")
 
   const queries = {
       where: {
-        name,
+        name: {
+          [Op.substring]: name
+        },
         type,
-        startDate
+        startDate: {
+          [Op.substring]: startDate
+        }
       },
       limit: size,
       offset: size * (page - 1)
@@ -198,7 +199,7 @@ router.get('/', validateQueryParameters, async (req, res) => {
     delete event.EventImages
     event.numAttending = event.numAttending.length
   })
-  res.json({
+  return res.json({
     Events: eventList
   });
 })
@@ -230,12 +231,11 @@ router.post('/:eventId/attendance', requireAuth, async (req, res) => {
   let isMember = [];
   currentUserObj.Memberships.forEach(membership => {
     if (membership.groupId === group.id) {
-      isMember.push(true);
+      isMember.push(membership.status);
     }
   })
-  // console.log(isMember)
   // if they are not a member of the group, FORBIDDEN
-  if (!isMember.length) {
+  if (isMember.length == 0 || isMember.includes('pending')) {
     res.status(403);
     return res.json({
       message: "Forbidden"
@@ -269,7 +269,7 @@ router.post('/:eventId/attendance', requireAuth, async (req, res) => {
     status: 'pending'
   })
 
-  res.json({
+  return res.json({
     userId: newAttendee.userId,
     status: newAttendee.status
   })
@@ -283,7 +283,7 @@ router.post('/:eventId/images', requireAuth, async (req, res) => {
   const event = await Event.findByPk(eventId)
   if(!event) {
     res.status(404)
-    res.json({
+    return res.json({
       message: "Event couldn't be found"
     })
   }
@@ -312,10 +312,6 @@ router.post('/:eventId/images', requireAuth, async (req, res) => {
       status: 'attending'
     }
   })
-  // console.log(currentUser.toJSON())
-  // console.log('group:', group.toJSON())
-  // // console.log(cohost)
-  // // console.log(attendee)
   
   const host = currentUser.id == group.organizerId
 
@@ -344,14 +340,12 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
   const { eventId } = req.params;
   const { userId, status } = req.body;
   // Edge case: req.body.status is "pending"
-  // 400 "message": "Cannot change an attendance status to pending"
   if (status === 'pending') {
     return res.status(400).json({
       message: "Cannot change an attendance status to pending"
     })
   }
   // Edge case: Event don't exist
-  // 404 "message": "Event couldn't be found"
   const event = await Event.findByPk(eventId)
   if (!event) {
     return res.status(404).json({
@@ -365,12 +359,9 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
    include: {
      model: Membership
     }
-  })  
-  // console.log('group:', group.toJSON())
-  // console.log('currentUser:', currentUser.toJSON())
+  }) 
   
   // Edge case: Attendance doesn't exist for req.body userId
-  // 404 "message": "Attendance between the user and the event does not exist"
   const reqBodyUser = await User.findByPk(userId, {
     include: {
       model: Attendance
@@ -378,14 +369,12 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
   })
   if (!reqBodyUser) {
     return res.status(404).json({
-      message: "Attendance between the user and the event does not exist"
+      message: "User couldn't be found"
     })
   }
-  // console.log(reqBodyUser)
   // get the record of the reqBodyUser that matches this event so we can update it later
   let attending = [];
   reqBodyUser.Attendances.forEach(attendance => {
-    // attendance = attendance.toJSON()
     if (attendance.eventId == eventId) {
       attending.push(attendance)
     }
@@ -396,7 +385,6 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
       message: "Attendance between the user and the event does not exist"
     })
   }
-  
   // currentUser must be organizer OR be cohost to group
   let cohost = [];
   currentUser.Memberships.forEach(membership => {
@@ -404,7 +392,6 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
     // if currentUser's membership's groupId matches the event's group
     // and currentUser's membership's status in this group is cohost'
     if (membership.groupId == group.id && membership.status == 'co-host') {
-      // console.log(true);
       cohost.push(true)
     }
   })
@@ -417,14 +404,6 @@ router.put('/:eventId/attendance', requireAuth, async (req, res) => {
       status
     })
     return res.json(updatedAttendance)
-    /* SUCCESS RES
-      {
-        "id": 1,
-        "eventId": 1,
-        "userId": 2,
-        "status": "attending"
-      }
-    */
   } else {
     res.status(403);
     return res.json({
@@ -441,7 +420,7 @@ router.put('/:eventId', requireAuth, async (req, res) => {
   const venue = await Venue.findByPk(venueId)
   if(!venue) {
     res.status(404)
-    res.json({
+    return res.json({
       message: "Venue couldn't be found"
     })
   }
@@ -449,7 +428,7 @@ router.put('/:eventId', requireAuth, async (req, res) => {
   const event = await Event.findByPk(eventId)
   if(!event) {
     res.status(404)
-    res.json({
+    return res.json({
       message: "Event couldn't be found"
     })
   }
@@ -571,7 +550,7 @@ router.delete('/:eventId', requireAuth, async (req, res) => {
   const event = await Event.findByPk(eventId)
   if(!event) {
     res.status(404)
-    res.json({
+    return res.json({
       message: "Event couldn't be found"
     })
   }
