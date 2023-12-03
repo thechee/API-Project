@@ -191,10 +191,6 @@ router.get('/:groupId/venues', requireAuth, async (req, res) => {
       }
     }
   })
-  // console.log(currentUser.toJSON())
-  // console.log(group.toJSON())
-  // console.log(cohost !== null)
-  // console.log(group.organizerId == user.id)
 
   if (group.organizerId == user.id || cohost !== null) {
     const venues = await Venue.findAll({
