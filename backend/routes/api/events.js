@@ -10,15 +10,17 @@ const validateQueryParameters = [
   check('page')
     .custom((value) => {
       if (value === undefined) return true;
-      if (value >= 1 && value <= 10) return true;
-    })
-    .withMessage("Page must be greater than or equal to 1"),
+      if (value < 1) throw new Error("Page must be greater than or equal to 1")
+      if (value > 10) throw new Error("Page must be less than or equal to 10")
+      return true
+    }),
   check('size')
     .custom((value) => {
       if (value === undefined) return true;
-      if (value >= 1 && value <= 20) return true;
-    })
-    .withMessage("Size must be greater than or equal to 1"),
+      if (value < 1) throw new Error("Size must be greater than or equal to 1")
+      if (value > 20) throw new Error("Size must be less than or equal to 20")
+      return true;
+    }),
   check('name')
     .custom((value) => {
       if (value === undefined) return true

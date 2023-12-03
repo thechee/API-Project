@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     lat: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.FLOAT,
       validate: {
         isWithin90(value) {
           if (Math.abs(value) > 90) {
@@ -52,7 +52,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     lng: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.FLOAT,
       validate: {
         isWithin180(value) {
           if (Math.abs(value) > 180) {
