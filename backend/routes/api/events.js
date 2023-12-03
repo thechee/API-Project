@@ -8,34 +8,37 @@ const { Op } = require('sequelize');
 
 const validateQueryParameters = [
   check('page')
+    .optional()
     .custom((value) => {
-      if (value === undefined) return true;
-      if (value >= 1 && value <= 10) return true;
-    })
-    .withMessage("Page must be greater than or equal to 1"),
+      // if (value === undefined) return true;
+      if (value < 1) throw new Error("Page must be greater than or equal to 1")
+      if (value > 10) throw new Error("Page must be less than or equal to 10")
+      return true
+    }),
   check('size')
+    .optional()
     .custom((value) => {
-      if (value === undefined) return true;
-      if (value >= 1 && value <= 20) return true;
-    })
-    .withMessage("Size must be greater than or equal to 1"),
+      // if (value === undefined) return true;
+      if (value < 1) throw new Error("Size must be greater than or equal to 1")
+      if (value > 20) throw new Error("Size must be less than or equal to 20")
+      return true;
+    }),
   check('name')
+    .optional()
     .custom((value) => {
-      if (value === undefined) return true
+      // if (value === undefined) return true
       if (value === value.toString()) return true
     })
     .withMessage("Name must be a string"),
   check('type')
+    .optional()
     .custom((value) => {
-      if (value === undefined) return true
       if (value.includes('Online') || value.includes('In person')) return true
     })
     .withMessage("Type must be 'Online' or 'In person'"),
   check('startDate')
-    .custom((value) => {
-      if (value === undefined) return true
-      if ((new Date(value)).getDate()) return true
-    })
+    .optional()
+    .isISO8601()
     .withMessage("Start date must be a valid datetime"),
   handleValidationErrors
 ]
@@ -142,7 +145,9 @@ router.get('/', validateQueryParameters, async (req, res) => {
 
   if (name) name = name.replace(/"/g,"")
   if (type) type = type.replace(/"/g,"")
-  if (startDate) startDate = startDate.replace(/"/g,"")
+  // if (startDate) startDate = startDate.replace(/"/g,"")
+// startDate = parseInt(startDate)
+// console.log(typeof startDate)
 
   const queries = {
       where: {
