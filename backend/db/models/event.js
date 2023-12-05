@@ -80,12 +80,28 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isDate: true,
         isAfter: new Date().toJSON().slice(0, 10)
+      },
+      get: function() {
+        let year = this.getDataValue('startDate').getFullYear()
+        let month = this.getDataValue('startDate').getMonth() + 1
+        let day = this.getDataValue('startDate').getDate()
+
+        let time = this.getDataValue('startDate').toLocaleTimeString('en-GB')
+        return `${year}/${month}/${day} ${time}`
       }
     },
     endDate: {
       type: DataTypes.DATE,
       validate: {
         isDate: true,
+      },
+      get: function() {
+        let year = this.getDataValue('endDate').getFullYear()
+        let month = this.getDataValue('endDate').getMonth() + 1
+        let day = this.getDataValue('endDate').getDate()
+
+        let time = this.getDataValue('endDate').toLocaleTimeString('en-GB')
+        return `${year}/${month}/${day} ${time}`
       }
     }
   }, {

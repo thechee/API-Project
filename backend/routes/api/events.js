@@ -147,7 +147,8 @@ router.get('/', validateQueryParameters, async (req, res) => {
   // if (startDate) startDate = startDate.replace(/"/g,"")
 // startDate = parseInt(startDate)
   // startDate = new Date(startDate).getDate()
-  console.log(startDate)
+  // startDate = new Date(startDate).toUTCString()
+
 
 
   const queries = {
@@ -173,9 +174,6 @@ router.get('/', validateQueryParameters, async (req, res) => {
       {
         model: EventImage,
         attributes: ['url'],
-        // where: {
-        //   preview: true
-        // }
       }, 
       {
         model: User,
@@ -197,6 +195,12 @@ router.get('/', validateQueryParameters, async (req, res) => {
   events.forEach(event => {
     eventList.push(event.toJSON())
   })
+  // console.log(eventList)
+  // eventList = eventList.filter(event => {
+  //   event.startDate == startDate
+  // })
+  // console.log(startDate)
+  // console.log(eventList)
 
   eventList.forEach(event => {
     if (event.EventImages[0]) {
