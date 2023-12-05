@@ -10,7 +10,6 @@ const validateQueryParameters = [
   check('page')
     .optional()
     .custom((value) => {
-      // if (value === undefined) return true;
       if (value < 1) throw new Error("Page must be greater than or equal to 1")
       if (value > 10) throw new Error("Page must be less than or equal to 10")
       return true
@@ -18,17 +17,13 @@ const validateQueryParameters = [
   check('size')
     .optional()
     .custom((value) => {
-      // if (value === undefined) return true;
       if (value < 1) throw new Error("Size must be greater than or equal to 1")
       if (value > 20) throw new Error("Size must be less than or equal to 20")
       return true;
     }),
   check('name')
     .optional()
-    .custom((value) => {
-      // if (value === undefined) return true
-      if (value === value.toString()) return true
-    })
+    .isAlpha()
     .withMessage("Name must be a string"),
   check('type')
     .optional()
@@ -38,7 +33,11 @@ const validateQueryParameters = [
     .withMessage("Type must be 'Online' or 'In person'"),
   check('startDate')
     .optional()
-    .isISO8601()
+    .isISO8601({
+      options: {
+        format: 'YYYY/MM/DD h:m'
+      }
+    })
     .withMessage("Start date must be a valid datetime"),
   handleValidationErrors
 ]
@@ -147,7 +146,9 @@ router.get('/', validateQueryParameters, async (req, res) => {
   if (type) type = type.replace(/"/g,"")
   // if (startDate) startDate = startDate.replace(/"/g,"")
 // startDate = parseInt(startDate)
-// console.log(typeof startDate)
+  // startDate = new Date(startDate).getDate()
+  console.log(startDate)
+
 
   const queries = {
       where: {
