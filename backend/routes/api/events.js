@@ -148,7 +148,7 @@ router.get('/', validateQueryParameters, async (req, res) => {
 // startDate = parseInt(startDate)
   // startDate = new Date(startDate).getDate()
   // startDate = new Date(startDate).toUTCString()
-
+console.log(startDate)
 
 
   const queries = {
@@ -157,9 +157,9 @@ router.get('/', validateQueryParameters, async (req, res) => {
           [Op.substring]: name
         },
         type,
-        startDate: {
-          [Op.substring]: startDate
-        }
+        // startDate: {
+        //   [Op.substring]: startDate
+        // }
       },
       limit: size,
       offset: size * (page - 1)
@@ -167,7 +167,7 @@ router.get('/', validateQueryParameters, async (req, res) => {
 
   if (!name) delete queries.where.name
   if (!type) delete queries.where.type
-  if (!startDate) delete queries.where.startDate
+  // if (!startDate) delete queries.where.startDate
 
   const events = await Event.findAll({
     include: [
@@ -195,14 +195,26 @@ router.get('/', validateQueryParameters, async (req, res) => {
   events.forEach(event => {
     eventList.push(event.toJSON())
   })
-  // console.log(eventList)
-  // eventList = eventList.filter(event => {
-  //   event.startDate == startDate
-  // })
-  // console.log(startDate)
+
+  let matchingDate = []
+  
+  eventList.forEach(event => {
+    if (startDate.split(' ').length == 1) {
+      if (event.startDate.split(' ')[0] == startDate) {
+      matchingDate.push(event)
+    }
+    }
+    if (startDate.split(' ').length == 2) {
+      if (event.startDate == startDate) {
+        matchingDate.push(event)
+      }
+    }
+  })
+
+  console.log(matchingDate)
   // console.log(eventList)
 
-  eventList.forEach(event => {
+  matchingDate.forEach(event => {
     if (event.EventImages[0]) {
       event.previewImage = event.EventImages[0].url;
     }
@@ -210,7 +222,7 @@ router.get('/', validateQueryParameters, async (req, res) => {
     event.numAttending = event.numAttending.length
   })
   return res.json({
-    Events: eventList
+    Events: matchingDate
   });
 })
 

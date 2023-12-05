@@ -87,7 +87,7 @@ module.exports = (sequelize, DataTypes) => {
         let day = this.getDataValue('startDate').getDate()
 
         let time = this.getDataValue('startDate').toLocaleTimeString('en-GB')
-        return `${year}/${month}/${day} ${time}`
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${time}`
       }
     },
     endDate: {
@@ -101,7 +101,7 @@ module.exports = (sequelize, DataTypes) => {
         let day = this.getDataValue('endDate').getDate()
 
         let time = this.getDataValue('endDate').toLocaleTimeString('en-GB')
-        return `${year}/${month}/${day} ${time}`
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${time}`
       }
     }
   }, {
