@@ -211,7 +211,7 @@ console.log(startDate)
       }
     }
   })
-  }
+  } else matchingDate = eventList;
 
 
   // console.log(matchingDate)
