@@ -198,7 +198,8 @@ console.log(startDate)
 
   let matchingDate = []
   
-  eventList.forEach(event => {
+  if (startDate) {
+    eventList.forEach(event => {
     if (startDate.split(' ').length == 1) {
       if (event.startDate.split(' ')[0] == startDate) {
       matchingDate.push(event)
@@ -210,8 +211,10 @@ console.log(startDate)
       }
     }
   })
+  }
 
-  console.log(matchingDate)
+
+  // console.log(matchingDate)
   // console.log(eventList)
 
   matchingDate.forEach(event => {
